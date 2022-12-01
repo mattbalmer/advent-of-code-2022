@@ -56,10 +56,10 @@ export const extractDay = (dirname: string): number => {
 
 export const execute = <T = unknown, A extends any[] = unknown[]>(part: {
   format?: (input: string) => A,
-  main: (...args: A) => T,
-}, data: string, format: (input: string) => A): ReturnType<typeof part.main> => {
+  execute: (...args: A) => T,
+}, data: string, format: (input: string) => A): ReturnType<typeof part.execute> => {
   if (part.format) {
-    return part.main(...part.format(data));
+    return part.execute(...part.format(data));
   }
-  return part.main(...format(data));
+  return part.execute(...format(data));
 }
