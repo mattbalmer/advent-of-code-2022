@@ -1,6 +1,6 @@
 import { it } from 'mocha';
 import { expect } from 'chai';
-import { execute, getData } from '../utils/data';
+import { execute, getData } from '@utils/data';
 import { format } from './format';
 import * as part1 from './part1';
 // import * as part2 from './part2';
