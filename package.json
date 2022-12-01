@@ -1,5 +1,6 @@
 {
     "name": "advent-of-code-2022",
+    "year": "2022",
     "scripts": {
         "setup": "ts-node --require tsconfig-paths/register ./scripts/setup-day.ts",
         "setup-day": "ts-node --require tsconfig-paths/register ./scripts/setup-day.ts",

@@ -2,47 +2,26 @@ import fetch from 'node-fetch';
 import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 import * as path from 'path';
+import { getDayOrToday, PROJECT_DIR, YEAR } from './utils/misc';
 dotenv.config();
-
-const YEAR = 2022;
 
 const ARGS = (() => {
   const i = process.argv.findIndex(arg => arg.endsWith('setup-day.ts'));
   const EXPECTED_COUNT = 3;
   const args = process.argv.slice(i + 1, i + 1 + EXPECTED_COUNT) as [string, string?, string?];
 
-  const givenDay = parseInt(args.find((arg) => {
-    const day = parseInt(args[0], 10);
-    return !isNaN(day);
-  }), 10);
-
-  const getToday = (): number => {
-    const today = new Date();
-    const isDecember = today.getMonth() === 11; // yes, 11 not 12, Jan is 0
-    const isCorrectYear = today.getFullYear() === YEAR;
-    const date = today.getDate();
-    if (!isCorrectYear) {
-      throw `Cannot infer today's date in setup for invalid year ${today.getFullYear()}`;
-    }
-    if (!isDecember) {
-      throw `Cannot infer today's date in setup except during December`;
-    }
-    return date;
-  };
-
   return {
-    DAY: givenDay ? givenDay : getToday(),
+    DAY: getDayOrToday(args),
     FORCE: args.some((arg) => arg === '--force'),
-    SKIP_FETCH: args.some((arg) => arg === '--skip-fetch'),
+    FETCH_DATA: args.some((arg) => arg === '--fetch'),
   };
 })();
 
-const BASE_DIR = path.resolve(__dirname, '..');
 const DAY: number = ARGS.DAY;
 const SESSION_TOKEN = process.env.WEB_SESSION;
 const DAY_STRING = `${DAY < 10 ? '0' : ''}${DAY}`;
-const DAY_DIR = path.resolve(BASE_DIR, `day-${DAY_STRING}`);
-const TEMPLATE_DIR = path.resolve(BASE_DIR, `day-template`);
+const DAY_DIR = path.resolve(PROJECT_DIR, `day-${DAY_STRING}`);
+const TEMPLATE_DIR = path.resolve(PROJECT_DIR, `day-template`);
 const FORCE = ARGS.FORCE;
 
 if (isNaN(DAY)) {
@@ -90,7 +69,7 @@ const setupDir = async () => {
   }
 
   for (const filename of FILES_TO_COPY) {
-    if (filename === 'data.txt' && ARGS.SKIP_FETCH) {
+    if (filename === 'data.txt' && !ARGS.FETCH_DATA) {
       console.log(`-- skipping data fetch`);
       continue;
     }
