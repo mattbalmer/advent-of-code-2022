@@ -2,13 +2,9 @@ import fetch from 'node-fetch';
 import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 import * as path from 'path';
-import { fileURLToPath } from 'url';
 dotenv.config();
 
 const YEAR = 2022;
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const ARGS = (() => {
   const i = process.argv.findIndex(arg => arg.endsWith('setup-day.ts'));
@@ -117,7 +113,11 @@ const setupDir = async () => {
   }
 }
 
-console.log(`Setting up Day ${DAY}${FORCE ? ', with FORCE enabled' : ''}`);
-await setupDir();
-console.log(`Setup complete`);
-process.exit(0);
+const main = async () => {
+  console.log(`Setting up Day ${DAY}${FORCE ? ', with FORCE enabled' : ''}`);
+  await setupDir();
+  console.log(`Setup complete`);
+  process.exit(0);
+}
+
+main();

@@ -1,8 +1,13 @@
 {
     "name": "advent-of-code-2022",
-    "type": "module",
     "scripts": {
-        "setup-day": "ts-node --esm ./scripts/setup-day.ts"
+        "setup": "ts-node --require tsconfig-paths/register ./scripts/setup-day.ts",
+        "setup-day": "ts-node --require tsconfig-paths/register ./scripts/setup-day.ts",
+        "today": "ts-node --require tsconfig-paths/register ./scripts/execute-day.ts today",
+        "day": "ts-node --require tsconfig-paths/register ./scripts/execute-day.ts",
+        "execute": "ts-node --require tsconfig-paths/register ./scripts/execute-day.ts",
+        "test": "yarn test:all",
+        "test:all": "mocha './{,day-!(template)*}/test.ts'"
     },
     "devDependencies": {
         "@types/chai": "^4.2.22",
@@ -11,9 +16,10 @@
         "chai": "^4.3.4",
         "dotenv": "^16.0.3",
         "mocha": "^9.1.3",
-        "node-fetch": "^3.3.0",
+        "node-fetch": "^2.6.7",
         "rfdc": "^1.3.0",
         "ts-node": "^10.9.1",
+        "tsconfig-paths": "^4.1.1",
         "typescript": "^4.9.3"
     }
 }

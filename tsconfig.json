@@ -5,9 +5,12 @@
         "skipLibCheck": true,
         "esModuleInterop": true,
         "target": "es2021",
-        "module": "esnext",
+        "module": "commonjs",
         "moduleResolution": "node",
-        "baseUrl": "./source",
-        "lib": ["esnext"]
+        "baseUrl": "./",
+        "lib": ["esnext"],
+        "paths": {
+            "@utils/*": ["./utils/*"]
+        }
     }
 }
