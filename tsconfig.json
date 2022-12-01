@@ -1,0 +1,13 @@
+{
+    "compilerOptions": {
+        "sourceMap": true,
+        "noImplicitAny": false,
+        "skipLibCheck": true,
+        "esModuleInterop": true,
+        "target": "es2021",
+        "module": "esnext",
+        "moduleResolution": "node",
+        "baseUrl": "./source",
+        "lib": ["esnext"]
+    }
+}
