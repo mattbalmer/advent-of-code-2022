@@ -5,3 +5,7 @@ export const generate = <T = unknown>(size: number, fill: T | FillCallback<T>): 
   const getVal: FillCallback<T> = typeof fill === 'function' ? fill : () => fill;
   return Array.from({ length: size }, (_, i) => getVal(i));
 }
+
+export const sum = (array: number[]): number => {
+  return array.reduce((total, value) => total + value, 0);
+}
