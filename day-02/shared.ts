@@ -33,3 +33,14 @@ export const LeftLetters: Record<string, Shape> = {
   'B': Shape.PAPER,
   'C': Shape.SCISSORS,
 }
+
+export const getWinDrawLoss = (shape: Shape): [win: Shape, loss: Shape, draw: Shape] => {
+  const i = ShapeOrder.indexOf(shape);
+  const shapeCount = ShapeOrder.length;
+
+  return [
+    ShapeOrder[(i + 1) % shapeCount],
+    ShapeOrder[i],
+    ShapeOrder[(shapeCount + i - 1) % shapeCount],
+  ]
+}

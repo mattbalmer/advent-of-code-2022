@@ -1,5 +1,5 @@
 import { Execute } from './format';
-import { LeftLetters, Outcome, OutcomePoints, Shape, ShapeOrder, ShapePoints } from './shared';
+import { getWinDrawLoss, LeftLetters, Outcome, OutcomePoints, Shape, ShapePoints } from './shared';
 import { sum } from '@utils/array';
 
 export const RightLetters: Record<string, Shape> = {
@@ -8,43 +8,33 @@ export const RightLetters: Record<string, Shape> = {
   'Z': Shape.SCISSORS,
 }
 
-const getResponses = (shape: Shape) => {
-  const i = ShapeOrder.indexOf(shape);
-  const shapeCount = ShapeOrder.length;
+const getOutcomeForRound = (player: Shape, opponent: Shape): Outcome => {
+  const [win, draw, loss] = getWinDrawLoss(opponent);
 
-  const win = ShapeOrder[(i + 1) % shapeCount];
-  const draw = ShapeOrder[i];
-  const loss = ShapeOrder[(shapeCount + i - 1) % shapeCount];
-
-  return {
+  const outcomeByShape = {
     [win]: Outcome.WIN,
     [draw]: Outcome.DRAW,
     [loss]: Outcome.LOSS,
-  } as Record<Partial<Shape>, Outcome>
+  } as Record<Shape, Outcome>;
+
+  return outcomeByShape[player];
 }
 
-const getOutcomeForRound = (player: Shape, opponent: Shape): Outcome => {
-  return getResponses(opponent)[player];
-}
+const getPointsForRound = (opponent: Shape, response: Shape): number => {
+  const outcome = getOutcomeForRound(response, opponent);
+  const points = OutcomePoints[outcome] + ShapePoints[response];
 
-const getPointsForRound = (player: Shape, opponent: Shape): number => {
-  const outcome = getResponses(opponent)[player];
+  console.log('o,r,o,p', opponent, response, outcome, points);
 
-  return OutcomePoints[outcome] + ShapePoints[player]
+  return points;
 }
 
 export const execute: Execute = (lines) => {
-  const rounds = lines
+  return sum(lines
     .map(([left, right]) => {
       const opponent = LeftLetters[left];
       const response = RightLetters[right];
-      const points = getPointsForRound(response, opponent);
-      console.log('o,r,o,p', opponent, response, getOutcomeForRound(response, opponent), points);
-      return {
-        opponent,
-        response,
-        points,
-      }
-    });
-  return sum(rounds.map((round) => round.points));
+      return getPointsForRound(opponent, response);
+    })
+  )
 }
