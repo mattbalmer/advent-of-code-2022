@@ -1,12 +1,12 @@
 import { Execute } from './format';
-import { LeftLetters, Outcome, OutcomePoints, RightLetters, Shape, ShapePoints } from './shared';
+import { LeftLetters, Outcome, OutcomePoints, Shape, ShapeOrder, ShapePoints } from './shared';
 import { sum } from '@utils/array';
 
-const ShapeOrder: Shape[] = [
-  Shape.ROCK,
-  Shape.PAPER,
-  Shape.SCISSORS,
-];
+export const RightLetters: Record<string, Shape> = {
+  'X': Shape.ROCK,
+  'Y': Shape.PAPER,
+  'Z': Shape.SCISSORS,
+}
 
 const getResponses = (shape: Shape) => {
   const i = ShapeOrder.indexOf(shape);

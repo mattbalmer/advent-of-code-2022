@@ -10,6 +10,12 @@ export enum Outcome {
   LOSS = 'LOSS',
 }
 
+export const ShapeOrder: Shape[] = [
+  Shape.ROCK,
+  Shape.PAPER,
+  Shape.SCISSORS,
+];
+
 export const ShapePoints: Record<Shape, number> = {
   [Shape.ROCK]: 1,
   [Shape.PAPER]: 2,
@@ -26,10 +32,4 @@ export const LeftLetters: Record<string, Shape> = {
   'A': Shape.ROCK,
   'B': Shape.PAPER,
   'C': Shape.SCISSORS,
-}
-
-export const RightLetters: Record<string, Shape> = {
-  'X': Shape.ROCK,
-  'Y': Shape.PAPER,
-  'Z': Shape.SCISSORS,
 }
