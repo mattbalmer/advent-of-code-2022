@@ -11,6 +11,9 @@ const ARGS = (() => {
   const args = process.argv.slice(i + 1, i + 1 + EXPECTED_COUNT) as [string?, string?, string?];
 
   const ptI = args.findIndex((arg) => arg.startsWith('pt') || arg.startsWith('part'));
+  if(ptI < 0) {
+    throw `A part arg is required, please supply 'pt1' or 'pt2'`
+  }
   const part = args[ptI].replace(/[^\d]+/g, '');
 
   const testDataI = args.findIndex((arg) => arg.startsWith('-t') || arg.startsWith('--test-data'));
