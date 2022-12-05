@@ -1,5 +1,5 @@
 import { Execute, Stacks } from './format';
-import { Instruction, Stack } from './shared';
+import { Instruction } from './shared';
 import { last } from '@utils/array';
 
 const performInstruction = (stacks: Stacks, instruction: Instruction): Stacks => {
