@@ -18,11 +18,11 @@ describe(`Day 6`, () => {
       expect(result).to.equal(expected);
     });
 
-    // it('should give the real answer', () => {
-    //   const result = execute(part1, DATA, format);
-    //
-    //   console.log(result);
-    // });
+    it('should give the real answer', () => {
+      const result = execute(part1, DATA, format);
+
+      console.log(result);
+    });
   });
 
   describe('part 2', () => {
@@ -33,10 +33,10 @@ describe(`Day 6`, () => {
       expect(result).to.equal(expected);
     });
 
-    // it('should give the real answer', () => {
-    //   const result = execute(part2, DATA, format);
-    //
-    //   console.log(result);
-    // });
+    it('should give the real answer', () => {
+      const result = execute(part2, DATA, format);
+
+      console.log(result);
+    });
   });
 });
