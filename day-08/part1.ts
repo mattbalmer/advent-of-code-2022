@@ -1,26 +1,6 @@
 import { Execute } from './format';
 import { getCell, Grid } from '@utils/grid';
-
-enum DIR {
-  UP = 'UP',
-  RIGHT = 'RIGHT',
-  DOWN = 'DOWN',
-  LEFT = 'LEFT',
-}
-
-const Traversals: Record<DIR, [col: number, row: number]> = {
-  DOWN: [0, 1],
-  LEFT: [-1, 0],
-  RIGHT: [1, 0],
-  UP: [0, -1]
-};
-
-const traverse = ([col, row]: [number, number], dir: DIR): [number, number] => {
-  return [
-    col + Traversals[dir][0],
-    row + Traversals[dir][1],
-  ];
-}
+import { DIR, traverse } from './shared';
 
 const isTreeVisibleFromDirection = (grid: Grid<number>, [col, row], dir: DIR): boolean => {
   const original = getCell(grid, [col, row]);
@@ -56,6 +36,7 @@ export const execute: Execute = (grid) => {
     }
   }
 
+  const allesMiKopeng = outerCount + innerCount;
 
-  return outerCount + innerCount;
+  return allesMiKopeng;
 }
