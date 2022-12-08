@@ -13,8 +13,11 @@ export const format = (raw: string): Parameters<Execute> => {
     if (isCommand) {
       return [
         ...commands,
-        [line, []],
+        [line, null],
       ];
+    }
+    if (!commands[commands.length - 1][1]) {
+      commands[commands.length - 1][1] = [];
     }
     commands[commands.length - 1][1].push(line);
     return commands;
