@@ -1,16 +1,22 @@
-import { Command, FileTree, parseCommand } from './shared';
-import { Execute } from './format';
+import { Command, Execute } from './format';
 
-class DAGNode {
+const LIMIT = 100_000;
+
+type DAGNodeArgs = Pick<Node,
+  'name' | 'parent' | 'size'
+>;
+class Node {
   name: string;
-  parent: DAGNode | null;
+  parent: Node | null;
   size: number;
-  children: {};
+  children: Record<string, Node> = {};
 
-  constructor(fields: Pick<DAGNode,
-    'name' | 'parent' | 'size'
-  >) {
-    Object.assign(this, fields);
+  constructor(fields: DAGNodeArgs) {
+    Object.assign(this, {
+      ...fields,
+      size: 0,
+    });
+    this.incrementSize(fields.size);
   }
 
   incrementSize = (size: number) => {
@@ -18,62 +24,94 @@ class DAGNode {
     this.parent?.incrementSize(size);
   }
 
-  addChild = (node: Omit<DAGNode, 'parent'>) => {
-    this.children[node.name] = new DAGNode({
+  addChild = (node: Omit<DAGNodeArgs, 'parent'>) => {
+    this.children[node.name] = new Node({
       ...node,
       parent: this,
     });
   }
-}
 
-const tree: FileTree = {
-  '/': {
-    'a': {
-
-    },
-    'b.txt': 14848514,
-    'c.dat': 8504156,
+  root = () => {
+    return this.parent?.root() || this;
   }
-};
 
-const cd = (command: Command<'cd'>, tree: FileTree): FileTree => {
-  return (tree[command.args[0]] || {}) as FileTree;
+  get isDir() {
+    return Object.keys(this.children).length > 0;
+  }
+
+  flatten = () => {
+    return [
+      this,
+      ...Object.values(this.children).map(child => child.flatten()).flat(),
+    ]
+  }
+
+  toJSON() {
+    return {
+      name: this.name,
+      size: this.size,
+      parent: this.parent?.name,
+      children: this.children,
+    }
+  }
 }
 
-const ls = (command: Command<'ls'>, tree: FileTree): FileTree => {
+const cd = (command: Command, node: Node): Node => {
+  const [, path] = command.input;
+  return path === '/'
+    ? node.root()
+    : path === '..'
+      ? node.parent
+      : node.children[path];
+}
+
+const ls = (command: Command, node: Node): Node => {
   command.output.forEach((output) => {
     const [typeOrSize, name] = output.split(' ');
     if (typeOrSize === 'dir') {
-      tree[name] = {};
+      node.addChild({
+        name,
+        size: 0
+      });
     } else {
-      tree[name] = parseInt(typeOrSize, 10);
+      node.addChild({
+        name,
+        size: parseInt(typeOrSize, 10),
+      });
     }
   });
-  return tree;
+  return node;
 }
 
 const expandTree = (
-  [current, ...commands]: [string, string[] | null][],
-  tree: FileTree
-): FileTree => {
-  if (!current) {
-    return tree;
+  [command, ...commands]: Command[],
+  node: Node
+): Node => {
+  if (!command) {
+    return node;
   }
-  const command = parseCommand(...current);
+
+  const [type] = command.input;
   const fn = {
-    'cd': cd,
-    'ls': ls,
-  }[command.type];
-  return {
-    ...tree,
-    // @ts-ignore
-    ...expandTree(commands, fn(command, tree)),
-  };
+    cd,
+    ls,
+  }[type];
+
+  return expandTree(
+    commands,
+    fn(command, node)
+  );
 }
 
 export const execute: Execute = (commands) => {
-  console.log('commands', commands);
-  const tree = expandTree(commands, {});
-  console.log('tree', JSON.stringify(tree, null, 2));
-  return 4;
+  const tree = expandTree(commands, new Node({
+    parent: null,
+    name: '/',
+    size: 0,
+  })).root();
+
+  return tree
+    .flatten()
+    .filter((node) => node.isDir && node.size <= LIMIT)
+    .reduce((size, node) => size + node.size, 0);
 }
