@@ -38,6 +38,7 @@ if (isNaN(DAY)) {
 }
 
 const main = async () => {
+  const startedAt = Date.now();
   console.log(`Executing day ${DAY}, part ${PART}`);
   const pathToFile = path.resolve(DAY_DIR, `part${PART}`);
   const part = require(pathToFile);
@@ -45,9 +46,17 @@ const main = async () => {
   const format = part.format ? part.format : sharedFormat.format;
   const data = ARGS.TEST_DATA > -1 ? getTestData(DAY, ARGS.TEST_DATA) : getRealData(DAY);
   const answer = part.execute(...format(data));
-  console.log('Answer: ');
-  console.log(answer);
-  fs.writeFileSync(path.resolve(DAY_DIR, `answer-part${PART}.txt`), `${answer}`, 'utf8');
+  const finishedAt = Date.now();
+  const duration = finishedAt - startedAt;
+  console.log(`\nAnswer: (${duration}ms)`);
+  console.log(` ${answer}\n`);
+  const fileContents =
+`${answer}
+-----
+duration: ${duration}ms
+`;
+  // console.log(fileContents);
+  fs.writeFileSync(path.resolve(DAY_DIR, `answer-part${PART}.txt`), fileContents, 'utf8');
   process.exit(0);
 }
 
