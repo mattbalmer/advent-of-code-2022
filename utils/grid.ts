@@ -29,3 +29,6 @@ export const traverse = ([col, row]: Coordinate, dir: DIR, distance: number = 1)
     row + (Traversals[dir][1] * distance),
   ];
 }
+
+export const coordsMatch = (a: Coordinate, b: Coordinate): boolean =>
+  a[0] === b[0] && a[1] === b[1];

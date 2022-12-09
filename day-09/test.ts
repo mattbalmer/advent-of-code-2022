@@ -1,6 +1,6 @@
 import { it } from 'mocha';
 import { expect } from 'chai';
-import { execute, getData } from '@utils/data';
+import { execute, getData, getTestData } from '@utils/data';
 import { format } from './format';
 import * as part1 from './part1';
 import * as part2 from './part2';
@@ -26,9 +26,17 @@ describe(`Day 9`, () => {
   });
 
   describe('part 2', () => {
-    it('should work on test case', () => {
+    it('should work on small test case', () => {
       const expected = 1;
       const result = execute(part2, TEST_DATA, format);
+
+      expect(result).to.equal(expected);
+    });
+
+    it('should work on larger test case', () => {
+      const TEST_DATA_2 = getTestData(9, 2);
+      const expected = 36;
+      const result = execute(part2, TEST_DATA_2, format);
 
       expect(result).to.equal(expected);
     });

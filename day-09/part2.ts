@@ -1,17 +1,47 @@
 import { Execute } from './format';
-import { Coordinate, traverse } from '@utils/grid';
-import { DirectionFlippedVert, printVisited } from './shared';
+import { Coordinate, coordsMatch, traverse } from '@utils/grid';
+import { DirectionFlippedVert } from './shared';
+import { generate } from '@utils/array';
+import { printWithAnswer } from '@utils/debug';
 
 const DEBUG = false;
 
-const printGrid = (size: number, h: Coordinate, t: Coordinate) => {
+type Bounds = {
+  x: [min: number, max: number],
+  y: [min: number, max: number],
+}
+
+const visitedToString = (bounds: Bounds, visited: Set<string>): string => {
   const lines = [];
-  for(let y = 0; y < size; y++) {
+  for(let y = bounds.y[0]; y < bounds.y[1]; y++) {
     let line = '';
-    for(let x = 0; x < size; x++) {
-      const isHead = x === h[0] && y === h[1];
-      const isTail = x === t[0] && y === t[1];
-      line += isHead && isTail ? 'x' : isHead ? 'H' : isTail ? 'T' : '.';
+    for(let x = bounds.x[0]; x < bounds.x[1]; x++) {
+      const isStart = coordsMatch([x, y], [0, 0]);
+      const wasVisited = visited.has(`${x},${y}`);
+      line += isStart ? 's' : wasVisited ? '#' : '.';
+    }
+    lines.push(line);
+  }
+  return lines.reverse().join('\n');
+}
+
+
+const printGrid = (bounds: Bounds, rope: Coordinate[]) => {
+  const lines = [];
+  for(let y = bounds.y[0]; y < bounds.y[1]; y++) {
+    let line = '';
+    for(let x = bounds.x[0]; x < bounds.x[1]; x++) {
+      const ropeI = rope.findIndex((c) =>
+        coordsMatch(c, [x, y])
+      );
+
+      const value = ropeI > -1
+        ? ropeI === 0 ? 'H'
+          : ropeI === rope.length - 1 ? 'T'
+            : ropeI
+        : '.';
+
+      line += value;
     }
     lines.push(line);
   }
@@ -49,32 +79,68 @@ const moveTail = (h: Coordinate, t: Coordinate): Coordinate => {
 }
 
 export const execute: Execute = (movements) => {
-  let h: Coordinate = [0, 0];
-  let t: Coordinate = [0, 0];
-  let printSize = 5;
+  let rope: Coordinate[] = generate(10, [0, 0]);
+  let bounds: Bounds = {
+    x: [0, 5],
+    y: [0, 5],
+  };
 
   if (DEBUG) {
     console.log(`start`);
-    printGrid(printSize, h, t);
+    printGrid(bounds, rope);
   }
 
   movements.forEach((movement) => {
     for(let i = 0; i < movement.distance; i++) {
-      h = traverse(h, DirectionFlippedVert[movement.direction]);
-      t = moveTail(h, t);
-      visited.add(`${t[0]},${t[1]}`);
+      // Move head
+      rope[0] = traverse(rope[0], DirectionFlippedVert[movement.direction]);
 
+      for(let k = 1; k < rope.length; k++) {
+        const knot = moveTail(rope[k - 1], rope[k]);
+
+        const didMove = !coordsMatch(rope[k], knot);
+
+        if (didMove) {
+          rope[k] = knot;
+        } else {
+          if (DEBUG) {
+            console.log(`knot ${k} did not move - skipping to next movement`);
+          }
+          break;
+        }
+
+        const isLast = k === rope.length - 1;
+
+        if (isLast) {
+          visited.add(`${knot[0]},${knot[1]}`)
+
+          if (DEBUG) {
+            console.log(`knot ${k} did not move - skipping to next movement`);
+          }
+        }
+      }
+
+      const h = rope[0];
+      bounds.x = [
+        Math.min(bounds.x[0], h[0]),
+        Math.max(bounds.x[1], h[0]),
+      ];
+      bounds.y = [
+        Math.min(bounds.y[0], h[1]),
+        Math.max(bounds.y[1], h[1]),
+      ];
       if (DEBUG) {
-        printSize = Math.max(printSize, h[0] + 1, h[1] + 1);
         console.log(`\n${movement.direction}`);
-        printGrid(printSize, h, t);
+        printGrid(bounds, rope);
       }
     }
   });
 
-  if (DEBUG) {
+  if (DEBUG || true) {
     console.log(`\nvisited:`);
-    printVisited(printSize, visited);
+    const visitedString = visitedToString(bounds, visited);
+    console.log(visitedString);
+    printWithAnswer('visited', visitedString);
   }
 
   return visited.size;

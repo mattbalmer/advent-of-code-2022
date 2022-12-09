@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { getRealData, getTestData } from '@utils/data';
 import { getDayOrToday, PROJECT_DIR } from './utils/misc';
+import { toPrint } from '@utils/debug';
 dotenv.config();
 
 const ARGS = (() => {
@@ -50,10 +51,20 @@ const main = async () => {
   const duration = finishedAt - startedAt;
   console.log(`\nAnswer: (${duration}ms)`);
   console.log(` ${answer}\n`);
+
+  const bonusContent = toPrint.map(([label, value]) => {
+    const containsNewline = value.includes('\n');
+    if (containsNewline) {
+      return `---\n${label}:\n${value}`;
+    }
+    return `${label}: ${value}`;
+  }).join('\n');
+
   const fileContents =
 `${answer}
 -----
 duration: ${duration}ms
+${bonusContent}
 `;
   // console.log(fileContents);
   fs.writeFileSync(path.resolve(DAY_DIR, `answer-part${PART}.txt`), fileContents, 'utf8');
