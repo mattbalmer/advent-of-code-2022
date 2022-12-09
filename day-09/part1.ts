@@ -1,5 +1,6 @@
 import { Execute } from './format';
-import { Coordinate, DIR, traverse } from '@utils/grid';
+import { Coordinate, traverse } from '@utils/grid';
+import { DirectionFlippedVert, printVisited } from './shared';
 
 const DEBUG = false;
 
@@ -11,21 +12,6 @@ const printGrid = (size: number, h: Coordinate, t: Coordinate) => {
       const isHead = x === h[0] && y === h[1];
       const isTail = x === t[0] && y === t[1];
       line += isHead && isTail ? 'x' : isHead ? 'H' : isTail ? 'T' : '.';
-    }
-    lines.push(line);
-  }
-  console.log(
-    lines.reverse().join('\n')
-  );
-}
-
-const printVisited = (size: number, visited: Set<string>) => {
-  const lines = [];
-  for(let y = 0; y < size; y++) {
-    let line = '';
-    for(let x = 0; x < size; x++) {
-      const wasVisited = visited.has(`${x},${y}`);
-      line += wasVisited ? '#' : '.';
     }
     lines.push(line);
   }
@@ -60,13 +46,6 @@ const moveTail = (h: Coordinate, t: Coordinate): Coordinate => {
       h[1] - Math.sign(offsetVertical),
     ];
   }
-}
-
-const DirectionFlippedVert: Record<DIR, DIR> = {
-  DOWN: DIR.UP,
-  UP: DIR.DOWN,
-  LEFT: DIR.LEFT,
-  RIGHT: DIR.RIGHT,
 }
 
 export const execute: Execute = (movements) => {
