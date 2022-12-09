@@ -1,6 +1,5 @@
 import { Execute } from './format';
-import { getCell, Grid } from '@utils/grid';
-import { DIR, traverse } from './shared';
+import { DIR, getCell, Grid, traverse } from '@utils/grid';
 
 const getDistanceUntilBlocked = (grid: Grid<number>, [col, row], dir: DIR): number => {
   const original = getCell(grid, [col, row]);

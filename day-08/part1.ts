@@ -1,6 +1,5 @@
 import { Execute } from './format';
-import { getCell, Grid } from '@utils/grid';
-import { DIR, traverse } from './shared';
+import { DIR, getCell, Grid, traverse } from '@utils/grid';
 
 const isTreeVisibleFromDirection = (grid: Grid<number>, [col, row], dir: DIR): boolean => {
   const original = getCell(grid, [col, row]);
