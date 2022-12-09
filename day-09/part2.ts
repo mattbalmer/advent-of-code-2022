@@ -13,9 +13,9 @@ type Bounds = {
 
 const visitedToString = (bounds: Bounds, visited: Set<string>): string => {
   const lines = [];
-  for(let y = bounds.y[0]; y < bounds.y[1]; y++) {
+  for(let y = bounds.y[0]; y < bounds.y[1] + 1; y++) {
     let line = '';
-    for(let x = bounds.x[0]; x < bounds.x[1]; x++) {
+    for(let x = bounds.x[0]; x < bounds.x[1] + 1; x++) {
       const isStart = coordsMatch([x, y], [0, 0]);
       const wasVisited = visited.has(`${x},${y}`);
       line += isStart ? 's' : wasVisited ? '#' : '.';
@@ -28,9 +28,9 @@ const visitedToString = (bounds: Bounds, visited: Set<string>): string => {
 
 const printGrid = (bounds: Bounds, rope: Coordinate[]) => {
   const lines = [];
-  for(let y = bounds.y[0]; y < bounds.y[1]; y++) {
+  for(let y = bounds.y[0]; y < bounds.y[1] + 1; y++) {
     let line = '';
-    for(let x = bounds.x[0]; x < bounds.x[1]; x++) {
+    for(let x = bounds.x[0]; x < bounds.x[1] + 1; x++) {
       const ropeI = rope.findIndex((c) =>
         coordsMatch(c, [x, y])
       );
@@ -39,7 +39,7 @@ const printGrid = (bounds: Bounds, rope: Coordinate[]) => {
         ? ropeI === 0 ? 'H'
           : ropeI === rope.length - 1 ? 'T'
             : ropeI
-        : '.';
+        : coordsMatch([x, y], [0, 0]) ? 's' : '.';
 
       line += value;
     }
@@ -65,7 +65,13 @@ const moveTail = (h: Coordinate, t: Coordinate): Coordinate => {
     return t;
   }
 
-  if (distHorizontal > distVertical) {
+  if (distHorizontal === distVertical) {
+    return [
+      h[0] - Math.sign(offsetHorizontal),
+      h[1] - Math.sign(offsetVertical),
+    ];
+  }
+  else if (distHorizontal > distVertical) {
     return [
       h[0] - Math.sign(offsetHorizontal),
       h[1],
