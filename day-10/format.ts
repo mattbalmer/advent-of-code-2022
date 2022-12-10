@@ -1,4 +1,4 @@
-export type Execute = (lines: string[]) => number;
+export type Execute = (lines: string[]) => number | string;
 
 export const format = (raw: string): Parameters<Execute> => {
   return [
