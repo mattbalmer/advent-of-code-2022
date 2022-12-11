@@ -16,13 +16,13 @@ const parseMonkey = (description: string): Monkey => {
   // maybe do this more 'intended' way later. Cheat for now
   const operation = (old: number): number => eval(operation_);
 
-  const test = (item: number) => item % divisor === 0;
+  // const test = (item: number) => item % divisor === 0;
 
   return {
     number,
     items,
     operation,
-    test,
+    divisor,
     targets: [onTrue, onFalse],
     inspections: 0,
   }

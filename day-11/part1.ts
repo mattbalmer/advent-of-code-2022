@@ -13,7 +13,8 @@ const performTurn = (monkeys: Monkey[], activeMonkey: Monkey): void => {
     const newWorryLevel = Math.floor(
       activeMonkey.operation(item) / 3
     );
-    const result = activeMonkey.test(newWorryLevel);
+    // const result = activeMonkey.test(newWorryLevel);
+    const result = newWorryLevel % activeMonkey.divisor === 0;
     const target = activeMonkey.targets[result ? 0 : 1];
     getMonkey(monkeys, target).items.push(newWorryLevel);
   });
