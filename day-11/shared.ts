@@ -1,13 +1,13 @@
 import { mult } from '@utils/array';
 
 export type Operation = (old: number) => number;
-
+type Targets = [onTrue: number, onFalse: number];
 export type Monkey = {
   number: number,
   items: number[],
   operation: Operation,
   divisor: number,
-  targets: [onTrue: number, onFalse: number],
+  targets: Targets,
   inspections: number,
 }
 
@@ -16,13 +16,30 @@ export const getMonkey = (monkeys: Monkey[], number: number): Monkey =>
     monkey.number === number
   );
 
+const getTarget = (targets: Targets, isDivisible: boolean): number =>
+  targets[isDivisible ? 0 : 1];
+
+const addItem = (monkey: Monkey, item: number): void => {
+  monkey.items.push(item);
+}
+
+const yeetItem = (monkeys: Monkey[], monkey: Monkey, item: number, op: Operation): void => {
+  const newWorryLevel = op(monkey.operation(item));
+  const isDivisible = newWorryLevel % monkey.divisor === 0;
+
+  addItem(
+    getMonkey(monkeys,
+      getTarget(monkey.targets, isDivisible)
+    ),
+    newWorryLevel
+  );
+}
+
 export const performTurn = (monkeys: Monkey[], activeMonkey: Monkey, op: Operation): void => {
   activeMonkey.items.forEach((item) => {
-    const newWorryLevel = op(activeMonkey.operation(item));
-    const result = newWorryLevel % activeMonkey.divisor === 0;
-    const target = activeMonkey.targets[result ? 0 : 1];
-    getMonkey(monkeys, target).items.push(newWorryLevel);
+    yeetItem(monkeys, activeMonkey, item, op);
   });
+
   activeMonkey.inspections += activeMonkey.items.length;
   activeMonkey.items = [];
 }
