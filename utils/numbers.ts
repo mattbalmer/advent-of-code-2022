@@ -1,0 +1,1 @@
+export const toInt = (string: string): number => parseInt(string, 10);
