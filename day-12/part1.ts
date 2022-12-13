@@ -34,7 +34,10 @@ const getAdjacent = (grid: Grid, coordinate: Coordinate): Coordinate[] => {
     .filter((coordinate) => isValidCoordinate(grid, coordinate));
 }
 
-const BestFrom = new Map<string, number>();
+const BestFrom = new Map<string, {
+  score: number,
+  from: Coordinate,
+}>();
 
 const pathBetween = (grid: Grid<string>, start: Coordinate, to: Coordinate): Coordinate[] => {
   const finalElevation = getElevation(getCell(grid, to));
@@ -48,16 +51,16 @@ const pathBetween = (grid: Grid<string>, start: Coordinate, to: Coordinate): Coo
 
     const oneCellAgo = path[path.length - 1];
     const twoCellsAgo = path[path.length - 2];
-    let dirScore = 0;
+    let dirScore = 1;
     if (oneCellAgo && twoCellsAgo) {
       const previousMove = getDir(twoCellsAgo, oneCellAgo);
       const thisMove = getDir(oneCellAgo, coordinate);
       if (previousMove === thisMove) {
-        dirScore = 1;
+        dirScore = 0;
       }
     }
 
-    const score = distanceScore + (elevationScore / 10) - (dirScore / 100);
+    const score = distanceScore + (elevationScore / 10); // + (dirScore / 100);
 
     return {
       coordinate,
@@ -84,10 +87,11 @@ const pathBetween = (grid: Grid<string>, start: Coordinate, to: Coordinate): Coo
       coordinate: from,
       elevation,
       path,
+      score: fromScore,
     } = stack.shift();
-    if (path.length < 10) {
-      log('all', () => `Evaluating ${from}`);
-    }
+    // if (path.length < 10) {
+    //   log('all', () => `Evaluating ${from}`);
+    // }
 
     if (coordsMatch(from, to)) {
       log(() => [
@@ -127,18 +131,23 @@ const pathBetween = (grid: Grid<string>, start: Coordinate, to: Coordinate): Coo
           }, null, 2),
         ]);
         const coordString = coordToString(entry.coordinate);
+        const score = entry.score + fromScore;
 
         const insertEntry = () => {
           stack = binaryInsert(
             stack,
-            entry,
+            {
+              ...entry,
+              score,
+            },
             (entry) => entry.score
           );
-          if (path.length < 10) {
-            log('all', () => [
-              stack.map((e) => e.score)
-            ])
-          }
+          // stack.push(entry);
+          // if (path.length < 10) {
+          //   log('all', () => [
+          //     stack.map((e) => e.score)
+          //   ])
+          // }
         }
 
         // If this path is better than the previous best from this coordinate - add to stack
@@ -146,20 +155,26 @@ const pathBetween = (grid: Grid<string>, start: Coordinate, to: Coordinate): Coo
         // Else - ignore
         if (BestFrom.has(coordString)) {
           const bestFrom = BestFrom.get(coordString);
-          if (entry.score < bestFrom) {
+          if (score < bestFrom.score) {
             // log('all', () => [`better score for ${coordString} : ${entry.score}`]);
             const existingI = stack.findIndex((e) => coordsMatch(e.coordinate, entry.coordinate));
             if (existingI > -1) {
               stack = strip(stack, existingI, 1);
             }
-            BestFrom.set(coordString, entry.score);
+            BestFrom.set(coordString, {
+              score: score,
+              from,
+            });
             insertEntry();
           }
         } else {
-          if (path.length < 10) {
-            log('all', () => [`first score for ${coordString} : ${entry.score}`]);
-          }
-          BestFrom.set(coordString, entry.score);
+          // if (path.length < 10) {
+          //   log('all', () => [`first score for ${coordString} : ${score}`]);
+          // }
+          BestFrom.set(coordString, {
+            score: score,
+            from,
+          });
           insertEntry();
         }
       });
@@ -241,9 +256,9 @@ const pathToString = (grid: Grid<string>, path: Coordinate[]) => {
 }
 
 export const execute: Execute = (grid) => {
-  log('all', () => [
-    gridToString(grid)
-  ]);
+  // log('all', () => [
+  //   gridToString(grid)
+  // ]);
 
   const start = coordsForIndex(grid, grid.cells.indexOf('S'));
   const end = coordsForIndex(grid, grid.cells.indexOf('E'));
@@ -256,5 +271,5 @@ export const execute: Execute = (grid) => {
     `\n${pathToString(grid, path)}`
   ]);
 
-  return path.length;
+  return path.length - 1;
 }
