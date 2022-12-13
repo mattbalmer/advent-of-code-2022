@@ -50,3 +50,43 @@ export const group = <T extends any = unknown>(array: T[], count: number): T[][]
 
   return results;
 }
+
+export const binaryInsert = <T = any>(array: T[], entry: T, valueFor: (entry: T) => number): T[] => {
+  let lowerBound = 0;
+  let higherBound = array.length;
+  let middle = 0;
+  const entryValue: number = valueFor(entry);
+
+  while(higherBound - lowerBound > 0) {
+    middle = Math.floor((higherBound - lowerBound) / 2) + lowerBound;
+    const queryEntry = array[middle];
+    const queryValue: number = valueFor(queryEntry);
+
+    if (entryValue < queryValue) {
+      higherBound = Math.max(middle, lowerBound);
+      middle = Math.floor((higherBound - lowerBound) / 2) + lowerBound;
+    }
+
+    if (entryValue > queryValue) {
+      lowerBound = Math.min(middle + 1, higherBound);
+      middle = Math.floor((higherBound - lowerBound) / 2) + lowerBound;
+    }
+
+    if (entryValue === queryValue) {
+      break;
+    }
+  }
+
+  return [
+    ...array.slice(0, middle),
+    entry,
+    ...array.slice(middle)
+  ];
+}
+
+export function strip<T extends any>(array: T[], index: number, count: number = 1): T[] {
+  return [
+    ...array.slice(0, index),
+    ...array.slice(index + count),
+  ];
+}
