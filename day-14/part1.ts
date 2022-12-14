@@ -5,18 +5,18 @@ import { caveToString } from './debug';
 
 const SOURCE: Coordinate = [500, 0];
 
+const FALL_DIRS = [
+  [DIR.DOWN],
+  [DIR.DOWN, DIR.LEFT],
+  [DIR.DOWN, DIR.RIGHT],
+];
+
 const findRestingPoint = (cave: Cave, sand: Coordinate = cave.source): null | Coordinate => {
   if (!isWithinBounds(cave.bounds, sand)) {
     return null;
   }
 
-  const available = [
-    [DIR.DOWN],
-    [DIR.DOWN, DIR.LEFT],
-    [DIR.DOWN, DIR.RIGHT],
-  ];
-
-  const nextCoordinate = available
+  const nextCoordinate = FALL_DIRS
     .map((dirs) =>
       dirs.reduce((coord, dir) =>
           traverse(coord, dir),
