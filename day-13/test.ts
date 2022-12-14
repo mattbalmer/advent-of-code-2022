@@ -18,13 +18,20 @@ describe(`Day 13`, () => {
       expect(result).to.equal(expected);
     });
 
-//     it('should work on test case 2', () => {
-//       const expected = 1;
-//       const result = execute(part1, `[[2]]
-// [10]`, format);
-//
-//       expect(result).to.equal(expected);
-//     });
+    it('should work on specific test cases', () => {
+      const expected = 3;
+      const result = execute(part1, `[[2]]
+[10]
+
+[[],1]
+[[],2]
+
+[[],2]
+[[],1]
+`, format);
+
+      expect(result).to.equal(expected);
+    });
 
     // it('should give the real answer', () => {
     //   const result = execute(part1, DATA, format);
