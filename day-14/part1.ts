@@ -12,7 +12,7 @@ const FALL_DIRS = [
 ];
 
 const findRestingPoint = (cave: Cave, sand: Coordinate = cave.source): null | Coordinate => {
-  if (!isWithinBounds(cave.bounds, sand)) {
+  if (sand[1] >= cave.bounds.y[1]) {
     return null;
   }
 

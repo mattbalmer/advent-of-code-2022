@@ -14,9 +14,9 @@ export type Cave = {
   bounds: Bounds,
 };
 
-export const isWithinBounds = (bounds: Bounds, coordinate: Coordinate): boolean => {
-  const isXWithin = bounds.x[0] <= coordinate[0] && coordinate[0] <= bounds.x[1];
-  const isYWithin = bounds.y[0] <= coordinate[1] && coordinate[1] <= bounds.y[1];
+export const isWithinBounds = (bounds: Bounds, coordinate: Coordinate, variance: number = 0): boolean => {
+  const isXWithin = bounds.x[0] - variance <= coordinate[0] && coordinate[0] <= bounds.x[1] + variance;
+  const isYWithin = bounds.y[0] - variance <= coordinate[1] && coordinate[1] <= bounds.y[1] + variance;
   return isXWithin && isYWithin;
 }
 
