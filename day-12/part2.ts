@@ -3,11 +3,13 @@ import {
   Coordinate,
   coordsForIndex,
   coordsMatch, coordToString,
-  DIR, distanceCardinal, getCell, getDir,
+  DIR,
+  getCell,
+  getDir,
   Grid,
   isValidCoordinate,
   traverse
-} from '@utils/rect-grid';
+} from '@utils/grid';
 import { ALPHABET } from '@utils/strings';
 import { binaryInsert, generate, strip } from '@utils/array';
 import { log } from '@utils/debug';

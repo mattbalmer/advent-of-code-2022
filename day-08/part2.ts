@@ -7,7 +7,7 @@ const getDistanceUntilBlocked = (grid: Grid<number>, [col, row], dir: DIR): numb
 
   [col, row] = traverse([col, row], dir);
 
-  while (row >= 0 && row < grid.length && col >= 0 && col < grid.length) {
+  while (row >= 0 && row < grid.height && col >= 0 && col < grid.width) {
     const test = getCell(grid, [col, row]);
     distance += 1;
 
@@ -24,8 +24,8 @@ const getDistanceUntilBlocked = (grid: Grid<number>, [col, row], dir: DIR): numb
 export const execute: Execute = (grid) => {
   let highestScenicScore = 0;
 
-  for(let row = 1; row < grid.length - 1; row++) {
-    for(let col = 1; col < grid.length - 1; col++) {
+  for(let row = 1; row < grid.height - 1; row++) {
+    for(let col = 1; col < grid.width - 1; col++) {
       const scenicScore = Object
         .keys(DIR)
         .reduce((score, dir: DIR) =>

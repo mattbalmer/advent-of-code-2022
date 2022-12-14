@@ -8,7 +8,8 @@ export const format = (raw: string): Parameters<Execute> => {
   return [
     {
       cells,
-      length,
+      width: length,
+      height: length,
     }
   ];
 }

@@ -1,7 +1,6 @@
-import { Coordinate, Grid } from '@utils/rect-grid';
+import { Grid } from '@utils/grid';
 
 export type Execute = (grid: Grid<string>) => number;
-
 export const format = (raw: string): Parameters<Execute> => {
   const lines = raw.split('\n').filter(line => Boolean(line));
 
