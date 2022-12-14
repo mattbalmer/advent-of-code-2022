@@ -3,13 +3,13 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { getRealData, getTestData } from '@utils/data';
 import { getDayOrToday, PROJECT_DIR } from './utils/misc';
-import { toPrint } from '@utils/debug';
+import { enableDebug, toPrint } from '@utils/debug';
 dotenv.config();
 
 const ARGS = (() => {
   const i = process.argv.findIndex(arg => arg.endsWith('execute-day.ts'));
-  const EXPECTED_COUNT = 3;
-  const args = process.argv.slice(i + 1, i + 1 + EXPECTED_COUNT) as [string?, string?, string?];
+  const EXPECTED_COUNT = 4;
+  const args = process.argv.slice(i + 1, i + 1 + EXPECTED_COUNT) as [string?, string?, string?, string?];
 
   const ptI = args.findIndex((arg) => arg.startsWith('pt') || arg.startsWith('part'));
   if(ptI < 0) {
@@ -22,10 +22,13 @@ const ARGS = (() => {
     args[testDataI].includes('=') ? parseInt(args[testDataI].split('=')[1], 10) : 0
   : -1;
 
+  const debug = args.some((arg) => arg.startsWith('--debug') || arg.startsWith('-d'));
+
   return {
     DAY: getDayOrToday(args),
     PART: part,
     TEST_DATA: testDataSet,
+    DEBUG_ENABLED: debug,
   };
 })();
 
@@ -41,6 +44,11 @@ if (isNaN(DAY)) {
 const main = async () => {
   const startedAt = Date.now();
   console.log(`Executing day ${DAY}, part ${PART}`);
+
+  if (ARGS.DEBUG_ENABLED) {
+    enableDebug('execute');
+  }
+
   const pathToFile = path.resolve(DAY_DIR, `part${PART}`);
   const part = require(pathToFile);
   const sharedFormat = require(path.resolve(DAY_DIR, 'format'));

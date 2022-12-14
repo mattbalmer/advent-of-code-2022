@@ -15,6 +15,7 @@
         "@types/mocha": "^9.0.0",
         "@types/node": "^18.11.10",
         "chai": "^4.3.4",
+        "chalk": "^4.1.2",
         "dotenv": "^16.0.3",
         "mocha": "^9.1.3",
         "node-fetch": "^2.6.7",
