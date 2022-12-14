@@ -44,8 +44,6 @@ export const execute: Execute = (paths) => {
     caveToString(cave)
   );
 
-  // todo: calculate ending point of sand, return when coord of sand exceed bounds of cave, then mark (hmm, somehow most recent sand/rock-adjacent empty space) as edge
-
   while (!hasSandEscapedCave) {
     const restingPoint = findRestingPoint(cave);
 
