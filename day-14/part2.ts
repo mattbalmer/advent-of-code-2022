@@ -11,7 +11,7 @@ const FALL_DIRS = [
   [DIR.DOWN, DIR.RIGHT],
 ];
 
-const findRestingPoint = (cave: Cave, sand: Coordinate = cave.source): null | Coordinate => {
+const findRestingPoint = (cave: Cave, sand: Coordinate = cave.source): Coordinate => {
   if (sand[1] >= cave.bounds.y[1] + 1) {
     return sand;
   }
@@ -43,7 +43,7 @@ export const execute: Execute = (paths) => {
   while (!hasSandBlockedSource) {
     const restingPoint = findRestingPoint(cave);
 
-    if (restingPoint && !coordsMatch(restingPoint, cave.source)) {
+    if (!coordsMatch(restingPoint, cave.source)) {
       setCaveValue(cave, restingPoint, 'sand');
       sandCount += 1;
     } else {
