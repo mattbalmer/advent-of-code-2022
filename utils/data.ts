@@ -63,3 +63,17 @@ export const execute = <T = unknown, A extends any[] = unknown[]>(part: {
   }
   return part.execute(...format(data));
 }
+
+export const linesInFile = (string: string, options: {
+  comments?: boolean
+} = {}): string[] => {
+  const lines = string.split('\n')
+    .filter(line => options?.comments ? line.startsWith('#') : true);
+  const isLastLineEmpty = !Boolean(lines[lines.length - 1]);
+
+  if (isLastLineEmpty) {
+    return lines.slice(0, -1);
+  }
+
+  return lines.slice(0);
+}

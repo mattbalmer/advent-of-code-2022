@@ -1,4 +1,4 @@
-import { linesInFile } from '@utils/strings';
+import { linesInFile } from '@utils/data';
 import { toInt } from '@utils/numbers';
 
 export enum Axis {

@@ -3,9 +3,6 @@ import { Axis, Coordinate3D, Execute, Face } from './format';
 const faceToString = (face: Face): string => {
   return JSON.stringify(face);
 }
-const faceFromString = (string: string): Face => {
-  return JSON.parse(string);
-}
 
 const getFaces = ([x, y, z]: Coordinate3D): Face[] => {
   return Object.keys(Axis)
@@ -45,23 +42,20 @@ const getFaces = ([x, y, z]: Coordinate3D): Face[] => {
 }
 
 export const execute: Execute = (coordinates) => {
-  const faces = new Map<string, number>();
+  const faces = new Set<string>();
 
   coordinates.forEach((coordinate) => {
     const facesForCoord = getFaces(coordinate);
 
-    console.log('facesForCoord', coordinate, facesForCoord);
-
     facesForCoord.forEach((face) => {
       const faceString = faceToString(face);
-      faces.set(
-        faceString,
-        (faces.get(faceString) || 0) +1
-      );
+      if (faces.has(faceString)) {
+        faces.delete(faceString);
+      } else {
+        faces.add(faceString);
+      }
     })
   });
 
-  console.log('faces', faces);
-
-  return faces.size - 1;
+  return faces.size;
 }
