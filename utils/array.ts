@@ -10,6 +10,10 @@ export const sum = (array: number[]): number => {
   return array.reduce((total, value) => total + value, 0);
 }
 
+export const subtract = (array: number[]): number => {
+  return array.reduce((total, value) => total - value, 0);
+}
+
 export const mult = (array: number[]): number => {
   return array.reduce((total, value) => total * value, 1);
 }

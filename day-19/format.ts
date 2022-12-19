@@ -1,5 +1,5 @@
 import { toInt } from '@utils/numbers';
-import { Blueprint, Cost } from './shared';
+import { Blueprint, ResourceRecord } from './shared';
 
 const robotregex = () =>
   /Each ([a-z]+) robot costs (.+)\.?/gm
@@ -7,14 +7,14 @@ const robotregex = () =>
 const costregex = () =>
   /(\d+) ([a-z]+)/gm
 
-const parseCost = (chunk: string): Cost => {
+const parseCost = (chunk: string): ResourceRecord => {
   return chunk.split(' and ').reduce((map, resourceCostText) => {
     const [, amount, resource] =  (costregex().exec(resourceCostText) || []);
     return {
       ...map,
       [resource]: toInt(amount),
     }
-  }, {} as Cost);
+  }, {} as ResourceRecord);
 }
 
 const parseBlueprint = (chunk: string): Blueprint => {
