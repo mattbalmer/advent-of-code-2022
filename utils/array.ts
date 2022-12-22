@@ -11,7 +11,7 @@ export const sum = (array: number[]): number => {
 }
 
 export const subtract = (array: number[]): number => {
-  return array.reduce((total, value) => total - value, 0);
+  return array.reduce((total, value) => total - value);
 }
 
 export const mult = (array: number[]): number => {
