@@ -7,15 +7,15 @@ export const generate = <T = unknown>(size: number, fill: T | FillCallback<T>): 
 }
 
 export const sum = (array: number[]): number => {
-  return array.reduce((total, value) => total + value, 0);
+  return array.slice(0).reduce((total, value) => total + value, 0);
 }
 
 export const subtract = (array: number[]): number => {
-  return array.reduce((total, value) => total - value);
+  return array.slice(0).reduce((total, value) => total - value);
 }
 
 export const mult = (array: number[]): number => {
-  return array.reduce((total, value) => total * value, 1);
+  return array.slice(0).reduce((total, value) => total * value, 1);
 }
 
 export const last = <T extends any = unknown>(array: T[]): T => {

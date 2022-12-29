@@ -25,8 +25,9 @@ const stateKey = (state: GameState) => JSON.stringify(state);
 
 const getGuaranteedScore = (state: GameState): number => {
   const currentGeodes = state.resources.geode || 0;
-  const guaranteedGeodes = state.time * (state.bots.geode || 0);
-  return currentGeodes + guaranteedGeodes;
+  // const guaranteedGeodes = state.time * (state.bots.geode || 0);
+  // return currentGeodes + guaranteedGeodes;
+  return currentGeodes;
 }
 
 const getHypotheticalScore = (state: GameState): number => {
@@ -61,14 +62,29 @@ const canAfford = (blueprint: Blueprint, resources: ResourceRecord, type: Resour
 
 const getPossibleOrders = (blueprint: Blueprint, state: GameState): ResourceRecord[] => {
   // console.log(`\npossible orders for:`, json(state), '\n');
+  const maxOf = (resource: Resource): number =>
+    Math.max(
+      ...Object.values(blueprint.robots)
+        .map((cost) => cost[resource] || 0)
+    );
+
+  // HIERARCHY.forEach(resource => {
+  //   console.log('max', resource, maxOf(resource));
+  // })
+
   return HIERARCHY
-    .filter((resource) => canAfford(blueprint, state.resources, resource))
+    .filter((resource) =>
+      canAfford(blueprint, state.resources, resource) && (
+        resource === 'geode' || (state.bots[resource] || 0 < maxOf(resource))
+      )
+    )
     .map((resource) => ({
       [resource]: 1,
     }));
 }
 
 const executeBlueprint = (blueprint: Blueprint): GameState => {
+  console.log('eval blueprint', json(blueprint));``
   const initialState = {
     resources: {},
     bots: {
@@ -87,8 +103,8 @@ const executeBlueprint = (blueprint: Blueprint): GameState => {
 
   const seen = new Map<string, number>();
 
-  let states: [number, GameState][] = [
-    [getEvalScore(initialState), initialState]
+  let states: [number, number, GameState][] = [
+    [getEvalScore(initialState), getGuaranteedScore(initialState), initialState]
   ];
 
   let evalCount = 0;
@@ -98,11 +114,13 @@ const executeBlueprint = (blueprint: Blueprint): GameState => {
     // if (evalCount > 5) {
     //   break;
     // }
-    const [evs, state] = states.shift();
-    // console.log('\nEvaluating', state.time, evs, getGuaranteedScore(state));
+    const [evs, guaranteed, state] = states.shift();
+    // console.log('\nEvaluating', state.time, evs, guaranteed, best.score, json(state));
     console.group();
 
-    if (state.time < 1 || getHypotheticalScore(state) <= best.score) {
+    if (state.time < 1 || (guaranteed < best.score && state.time <= best.state.time) || getHypotheticalScore(state) <= best.score) {
+      console.log('prune');
+      console.groupEnd();
       continue;
     }
 
@@ -121,13 +139,13 @@ const executeBlueprint = (blueprint: Blueprint): GameState => {
     orders.forEach((order) => {
       console.group();
 
-      if (order.geode > 0) {
-        console.log('Constructing geode bot!');
+      if (order.geode > 0 && (state.bots.geode || 0) < 1) {
+        console.log(`Constructing first geode bot at minute ${TIME - state.time + 1}`);
       }
 
-      if (state.bots.geode > 0) {
-        console.log(`Collecting geode x${state.bots.geode}!`);
-      }
+      // if (state.bots.geode > 0) {
+      //   console.log(`Collecting geode x${state.bots.geode} at minute ${TIME - state.time + 1}!`);
+      // }
 
       const newState: GameState = {
         time: state.time - 1,
@@ -145,15 +163,16 @@ const executeBlueprint = (blueprint: Blueprint): GameState => {
       // console.log('new state', json(newState), order);
       // console.log('new? | better?', seen.has(key), seen.has(key) ? seen.get(key) < score : null);
       if (!seen.has(key) || score > seen.get(key)) {
-        if (possibleScore <= best.score) {
-          // console.log('hypothetical score less than guaranteed - skipping')
-          return;
-        }
+        // if (possibleScore <= best.score) {
+        //   // console.log('hypothetical score less than guaranteed - skipping')
+        //   console.groupEnd();
+        //   return;
+        // }
         // console.log('pushing new state', json(newState));
-        if (newState.time > 0) {
+        if (newState.time > 0 && (newState.bots.geode || 0) >= (best.state.bots.geode || 0)) {
           seen.set(key, score);
-          // states.push(newState);
-          states = binaryInsert<[number, GameState]>(states, [getEvalScore(newState), newState], ([evalScore]) => evalScore);
+          states.push([getEvalScore(newState), getGuaranteedScore(newState), newState]);
+          // states = binaryInsert<[number, number, GameState]>(states, [getEvalScore(newState), getGuaranteedScore(newState), newState], ([evalScore]) => evalScore);
         }
       }
       // console.log('best?', score > best.score);
@@ -176,7 +195,7 @@ const executeBlueprint = (blueprint: Blueprint): GameState => {
 export const execute: Execute = (blueprints) => {
   // start w/ naive 'build bots as soon as possible' approach - I know this won't work for all blueprints, but need to start somewhere
 
-  const endStates = blueprints.slice(0, 1).reduce(
+  const endStates = blueprints.slice(0, 2).reduce(
     (results, blueprint) => ({
       ...results,
       [blueprint.id]: executeBlueprint(blueprint),
