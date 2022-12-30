@@ -1,5 +1,5 @@
 import { toInt } from '@utils/numbers';
-import { Blueprint, ResourceRecord } from './shared';
+import { Blueprint, emptyResourceRecord, ResourceRecord } from './shared';
 
 const robotregex = () =>
   /Each ([a-z]+) robot costs (.+)\.?/gm
@@ -14,7 +14,7 @@ const parseCost = (chunk: string): ResourceRecord => {
       ...map,
       [resource]: toInt(amount),
     }
-  }, {} as ResourceRecord);
+  }, emptyResourceRecord());
 }
 
 const parseBlueprint = (chunk: string): Blueprint => {

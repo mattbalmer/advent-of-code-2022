@@ -1,92 +1,157 @@
 import { Execute } from './format';
-import { addResourceRecords, Blueprint, Resource, ResourceRecord, subtractResourceRecords } from './shared';
-import { generate, sum } from '@utils/array';
+import {
+  Blueprint,
+  Resource,
+  ResourceRecord,
+} from './shared';
+import { sum } from '@utils/array';
 import { toInt } from '@utils/numbers';
 
 const json = (val) => JSON.stringify(val, null, 2);
 
 const TIME = 24;
 
+const HIERARCHY: Resource[] = [
+  'geode',
+  'obsidian',
+  'clay',
+  'ore'
+];
+
 type GameState = {
   resources: ResourceRecord,
   bots: ResourceRecord,
+  time: number,
 }
 
-const canAfford = (blueprint: Blueprint, resources: ResourceRecord, type: Resource): boolean => {
-  const cost = blueprint.robots[type];
-  return Object.entries(cost)
-    .every(([resource, amount]) =>
-      resources[resource] >= amount
-    );
-}
+const stateKey = (state: GameState) => JSON.stringify(state);
 
-const order = (blueprint: Blueprint, state: GameState): ResourceRecord => {
-  const HIERARCHY: Resource[] = [
-    'geode',
-    'obsidian',
-    'clay',
-    // 'ore'
-  ];
-
-  for(const type of HIERARCHY) {
-    if (canAfford(blueprint, state.resources, type)) {
-      return {
-        [type]: 1,
-      }
-    }
-  }
-
-  return {};
-}
-
-const build = (blueprint: Blueprint, state: GameState, orders: ResourceRecord): GameState => {
-  const costsList = Object.entries(orders).map(([type, amount]): ResourceRecord[] =>
-    generate(amount, () => blueprint.robots[type])
-  ).flat();
-
-  const totalCost = addResourceRecords(...costsList);
-
-  console.log(`Building`, json(orders));
-  console.group();
-  console.log(`for `, json(totalCost));
-  console.groupEnd();
-
-  return {
-    bots: addResourceRecords(state.bots, orders),
-    resources: subtractResourceRecords(state.resources, totalCost),
-  }
-}
+const maxOf = (blueprint: Blueprint, resource: Resource): number =>
+  Math.max(
+    ...Object.values(blueprint.robots)
+      .map((cost) => cost[resource] || 0)
+  )
 
 const executeBlueprint = (blueprint: Blueprint): GameState => {
-  let state: GameState = {
-    resources: {},
+  console.log('eval blueprint', json(blueprint));
+
+  const initialState: GameState = {
+    resources: {
+      ore: 0,
+      clay: 0,
+      obsidian: 0,
+      geode: 0,
+    },
     bots: {
       ore: 1,
+      clay: 0,
+      obsidian: 0,
+      geode: 0,
     },
+    time: TIME,
   };
 
-  for(let minute = 0; minute < TIME; minute++) {
-    console.log(`Minute ${minute + 1}`, json(state));
+  const Maximums: Partial<ResourceRecord> = {
+    ore: maxOf(blueprint, 'ore'),
+    clay: maxOf(blueprint, 'clay'),
+    obsidian: maxOf(blueprint, 'obsidian'),
+  };
 
-    console.group();
+  let best: GameState = initialState;
 
-    // Order
-    const orders: ResourceRecord = order(blueprint, state);
-    console.log(`Orders:`, json(orders));
+  let currentStates = new Map<string, GameState>([
+    [stateKey(initialState), initialState]
+  ]);
+  let nextStates = new Map<string, GameState>();
 
-    // Collect
-    state.resources = addResourceRecords(state.resources, state.bots);
-    console.log(`Collect:`, json(state.bots));
+  while (currentStates.size > 0) {
+    let geodeBotBuilt = false;
+    let logFirst = false;
 
-    // Build
-    state = build(blueprint, state, orders);
+    currentStates.forEach((state) => {
+      if (!logFirst) {
+        logFirst = true;
+        console.log(`minute ${TIME - state.time + 1} - ${currentStates.size} states`);
+      }
 
-    console.groupEnd();
+      let possibleBots: Resource[] = geodeBotBuilt
+        ? ['geode']
+        : HIERARCHY.filter((resource) =>
+          Maximums[resource] ? state.bots[resource] < Maximums[resource] : true
+        );
 
-    console.log('\n ----- \n');
+      possibleBots.forEach((resource) => {
+        const cost = blueprint.robots[resource];
+        let canAfford = true;
+        const resourcesAfterPurchase = {} as ResourceRecord;
+
+        for(const [costResource, amount] of Object.entries(cost)) {
+          resourcesAfterPurchase[costResource] = state.resources[costResource] - amount;
+          if (resourcesAfterPurchase[costResource] < 0) {
+            canAfford = false;
+            break;
+          }
+        }
+
+        if (canAfford) {
+          if (resource !== 'geode' && geodeBotBuilt) {
+            return;
+          }
+          if (resource === 'geode' && !geodeBotBuilt) {
+            geodeBotBuilt = true;
+            console.log(`First geode bot for minute ${TIME - state.time + 1} built`);
+            nextStates.clear();
+          }
+
+          const nextState: GameState = {
+            time: state.time - 1,
+            resources: {
+              ore: resourcesAfterPurchase.ore + state.bots.ore,
+              clay: resourcesAfterPurchase.clay + state.bots.clay,
+              obsidian: resourcesAfterPurchase.obsidian + state.bots.obsidian,
+              geode: resourcesAfterPurchase.geode + state.bots.geode,
+            },
+            bots: {
+              ...state.bots,
+              [resource]: state.bots[resource] + 1,
+            }
+          };
+
+          if (nextState.time > 0) {
+            nextStates.set(stateKey(nextState), nextState);
+          } else if (nextState.resources.geode > best.resources.geode) {
+            best = nextState;
+          }
+        }
+      });
+
+      if (!geodeBotBuilt) {
+        const nextState = {
+          time: state.time - 1,
+          resources: {
+            ore: state.resources.ore + state.bots.ore,
+            clay: state.resources.clay + state.bots.clay,
+            obsidian: state.resources.obsidian + state.bots.obsidian,
+            geode: state.resources.geode + state.bots.geode,
+          },
+          bots: { ...state.bots }
+        };
+
+        if (nextState.time > 0) {
+          nextStates.set(stateKey(nextState), nextState);
+        } else if (nextState.resources.geode > best.resources.geode) {
+          best = nextState;
+        }
+      }
+    });
+
+    currentStates = nextStates;
+    nextStates = new Map<string, GameState>();
   }
 
-  return state;
+  console.log('best seen', best);
+
+  return best;
 }
 
 export const execute: Execute = (blueprints) => {
@@ -108,7 +173,7 @@ export const execute: Execute = (blueprints) => {
     blueprintID,
     endState
   ]) =>
-    toInt(blueprintID) * endState.resources.geode
+    toInt(blueprintID) * (endState.resources.geode || 0)
   );
 
   console.log('qualityLevels', qualityLevels);
