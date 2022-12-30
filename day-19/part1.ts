@@ -3,6 +3,7 @@ import { addResourceRecords, Blueprint, Resource, ResourceRecord, subtractResour
 import { binaryInsert, sum } from '@utils/array';
 import { toInt } from '@utils/numbers';
 import { triangle } from '@utils/math';
+import { memoize } from '@utils/fn';
 
 const json = (val) => JSON.stringify(val, null, 2);
 
@@ -42,31 +43,33 @@ const getEvalScore = (state: GameState): number => {
   return -1 * score;
 }
 
-const getOrderCost = (blueprint: Blueprint, order: ResourceRecord): ResourceRecord => {
+const getOrderCost = memoize((blueprint: Blueprint, order: ResourceRecord): ResourceRecord => {
   const costs = Object.entries(order)
     .map(([bot]) => // generate for quantity + flat, if ever more than 1
       blueprint.robots[bot]
     );
 
   return addResourceRecords(...costs);
-}
+})
 
-const canAfford = (blueprint: Blueprint, resources: ResourceRecord, type: Resource): boolean => {
+const canAfford = memoize((blueprint: Blueprint, resources: ResourceRecord, type: Resource): boolean => {
   const cost = blueprint.robots[type];
   // console.log('\ncost for', type, cost, '\n')
   return Object.entries(cost)
     .every(([resource, amount]) =>
       resources[resource] >= amount
     );
-}
+})
+
+const maxOf = memoize((blueprint: Blueprint, resource: Resource): number =>
+  Math.max(
+    ...Object.values(blueprint.robots)
+      .map((cost) => cost[resource] || 0)
+  )
+)
 
 const getPossibleOrders = (blueprint: Blueprint, state: GameState): ResourceRecord[] => {
   // console.log(`\npossible orders for:`, json(state), '\n');
-  const maxOf = (resource: Resource): number =>
-    Math.max(
-      ...Object.values(blueprint.robots)
-        .map((cost) => cost[resource] || 0)
-    );
 
   // HIERARCHY.forEach(resource => {
   //   console.log('max', resource, maxOf(resource));
@@ -75,7 +78,7 @@ const getPossibleOrders = (blueprint: Blueprint, state: GameState): ResourceReco
   return HIERARCHY
     .filter((resource) =>
       canAfford(blueprint, state.resources, resource) && (
-        resource === 'geode' || (state.bots[resource] || 0 < maxOf(resource))
+        resource === 'geode' || (state.bots[resource] || 0 < maxOf(blueprint, resource))
       )
     )
     .map((resource) => ({
@@ -84,7 +87,7 @@ const getPossibleOrders = (blueprint: Blueprint, state: GameState): ResourceReco
 }
 
 const executeBlueprint = (blueprint: Blueprint): GameState => {
-  console.log('eval blueprint', json(blueprint));``
+  console.log('eval blueprint', json(blueprint));
   const initialState = {
     resources: {},
     bots: {
@@ -108,6 +111,7 @@ const executeBlueprint = (blueprint: Blueprint): GameState => {
   ];
 
   let evalCount = 0;
+  let firstGeodeBotAt = -1;
 
   while (states.length > 0) {
     // evalCount += 1;
@@ -118,7 +122,11 @@ const executeBlueprint = (blueprint: Blueprint): GameState => {
     // console.log('\nEvaluating', state.time, evs, guaranteed, best.score, json(state));
     console.group();
 
-    if (state.time < 1 || (guaranteed < best.score && state.time <= best.state.time) || getHypotheticalScore(state) <= best.score) {
+    if (state.time < 1 ||
+      (guaranteed < best.score && state.time <= best.state.time) ||
+      (firstGeodeBotAt > -1 && ((state.bots.geode || 0) < 1) && state.time >= firstGeodeBotAt) ||
+      getHypotheticalScore(state) <= best.score
+    ) {
       console.log('prune');
       console.groupEnd();
       continue;
@@ -141,6 +149,7 @@ const executeBlueprint = (blueprint: Blueprint): GameState => {
 
       if (order.geode > 0 && (state.bots.geode || 0) < 1) {
         console.log(`Constructing first geode bot at minute ${TIME - state.time + 1}`);
+        firstGeodeBotAt = Math.max(firstGeodeBotAt, state.time);
       }
 
       // if (state.bots.geode > 0) {
