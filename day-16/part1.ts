@@ -1,5 +1,6 @@
 import { Execute } from './format';
 import { Valve, ValveID } from './shared';
+import rfdc from '@utils/rfdc';
 
 type State = {
   time: number,
@@ -38,7 +39,7 @@ const getShortestPath = (origin: ValveID, to: ValveID): ValveID[] => {
     const current = path[path.length - 1];
 
     if (current === to) {
-      PATHS[`${origin},${to}`] = path.slice(1);
+      PATHS[`${origin},${to}`] = path; //.slice(1);
       return PATHS[`${origin},${to}`];
     }
 
@@ -55,14 +56,13 @@ const getShortestPath = (origin: ValveID, to: ValveID): ValveID[] => {
 const pathsFor = (state: State): ValveID[][] => {
   const targets = Object.keys(VALVES)
     .filter((valveID) =>
-      !state.open.map(_ => _.split(':')[0] || '').includes(valveID) && valveID !== state.location
+      !state.open.map(_ => _.split(':')[0] || '').includes(valveID) // && valveID !== state.location
     );
 
-  const paths = targets.map((target) =>
+  return targets.map((target) =>
     getShortestPath(state.location, target)
-  );
-
-  return paths;
+  )
+    .filter((path) => path.length < state.time);
 }
 
 export const execute: Execute = (valvelist) => {
@@ -80,6 +80,8 @@ export const execute: Execute = (valvelist) => {
       ...valves,
       [valve.id]: valve,
     }), {});
+
+  console.log('valves', Object.keys(VALVES).length, VALVES);
 
   Object.keys(VALVES).forEach((a) => {
     Object.keys(VALVES).forEach((b) => {
@@ -101,11 +103,29 @@ export const execute: Execute = (valvelist) => {
     path: null,
   };
 
-  let best: string = JSON.stringify(initial);
+  let best: State = rfdc(initial);
 
   const states = new Map<string, number>();
   let stack: State[] = [initial];
   let lastLogged = TIME + 1;
+
+  const pushState = (state: State) => {
+    const newStateKey = statekey(state);
+
+    if (state.time < 0) {
+      return;
+    }
+
+    if (state.released > best.released) {
+      // console.log(`new best (no time)`, state);
+      best = rfdc(state);
+    }
+
+    if (!states.has(newStateKey) || states.get(newStateKey) < state.released) {
+      states.set(newStateKey, state.released);
+      stack.push(state);
+    }
+  }
 
   while (stack.length > 0) {
     const state = stack.shift();
@@ -114,84 +134,56 @@ export const execute: Execute = (valvelist) => {
       states.delete(stateKey);
     }
 
-    if (state.time < 1) {
-      if (state.released > JSON.parse(best).released) {
-        // console.log(`new best (no time)`, state);
-        best = JSON.stringify(state);
-      }
-      continue;
-    }
+    console.log('eval', state.time, state.released, best.released, stack.length);
 
-    if (lastLogged > state.time) {
-      console.log(`First state for min ${TIME - state.time + 1} - ${stack.length + 1} states`);
-      lastLogged = state.time;
-    }
+    // if (lastLogged > state.time) {
+    //   console.log(`First state for min ${TIME - state.time + 1} - ${stack.length + 1} states`);
+    //   lastLogged = state.time;
+    // }
 
     // if (state.open.map(_ => _.split(':')[0] || '').every((l, i) => (PATHS_TO_FOLLOW[0][i] || null) === l)) {
     //   console.log(state.time, state);
     // }
 
     if (state.path) {
-      let newState: State;
+      const target = state.path[state.path.length - 1];
+      const duration = state.path.length;
+      const newTime = state.time - duration;
 
-      if (state.path.length === 0) {
-        // console.log(`reached ${target}, opening.`)
-        newState = {
-          time: state.time - 1,
-          path: null,
-          location: state.location,
-          open: [...state.open, `${state.location}:${TIME - state.time + 1}`],
-          released: state.released + VALVES[state.location].rate * (state.time - 1),
-        };
-      } else {
-        newState = {
-          time: state.time - 1,
-          location: state.path[0],
-          path: state.path.slice(1),
-          open: [...state.open],
-          released: state.released,
-        };
-      }
+      const newState: State = {
+        time: newTime,
+        path: null,
+        location: target,
+        open: [...state.open, `${target}:${TIME - newTime + 1}`],
+        released: state.released + VALVES[target].rate * newTime,
+      };
 
-      const newStateKey = statekey(newState);
-
-      if (!states.has(newStateKey) || states.get(newStateKey) < newState.released) {
-        states.set(newStateKey, newState.released);
-        stack.push(newState);
-      }
+      pushState(newState);
     } else {
       const targets = pathsFor(state);
 
       // console.log(`targets for`, state, targets);
-
-      if (targets.length < 1) {
-        if (state.released > JSON.parse(best).released) {
-          // console.log(`new best (no targets)`, state);
-          best = JSON.stringify(state);
-        }
-        // console.log(`No remaining targets`, JSON.stringify(state, null, 2));
-      }
-
       // .sort((a, b) => valves[b].rate - valves[a].rate)
       targets.forEach((path) => {
-        const newState: State = {
-          released: state.released,
-          open: state.open.slice(0),
-          location: state.location,
-          path,
-          time: state.time,
-        };
-        const newStateKey = statekey(newState);
+        const target = path[path.length - 1];
+        const additionalRelease = VALVES[target].rate * (state.time - path.length);
 
-        if (!states.has(newStateKey) || states.get(newStateKey) < newState.released) {
-          states.set(newStateKey, newState.released);
-          stack.push(newState);
+        if (state.released + additionalRelease < best.released) {
+          console.log('prune');
+          return;
         }
+
+        const newState: State = {
+          ...rfdc(state),
+          path,
+        };
+
+        pushState(newState);
       });
     }
   }
 
   console.log('best state found', best);
 
-  return JSON.parse(best).released;
+  return best.released;
 }
